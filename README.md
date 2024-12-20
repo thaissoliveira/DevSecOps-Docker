@@ -73,3 +73,18 @@ A partir disto, vá até seu terminal e entre no diretório onde está salvo o s
 
 Se seu usuário tiver as permissões necessárias e se estiver no grupo docker, então você conseguirá se conectar com sucesso!
 
+# Instalando o Nginx
+
+Para instalar o Nginx, execute os seguintes comandos em seu terminal:
+
+- ``sudo apt update -y`` - Atualiza a lista de pacotes disponíveis 
+- ``sudo apt upgrade -y`` - Atualiza todos os pacotes instalados para as versões mais recentes
+- ``sudo apt install nginx -y`` - Instala o servidor web Nginx
+- ``sudo systemctl start nginx`` - Inicia o serviço do Nginx
+- ``sudo systemctl enable nginx`` - Habilita o Nginx para iniciar automaticamente no boot
+
+Aqui, se você pesquisar o IP Público da sua instância no navegador, verá que o Nginx está funcionando:
+
+![image](https://github.com/user-attachments/assets/96607cde-5c7a-4d20-89fe-4ec8608bab08)
+
+
