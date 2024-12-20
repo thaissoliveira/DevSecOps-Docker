@@ -58,3 +58,18 @@ Configuração da minha VPC recém criada:
 Após isso, executei minha instância!   :)
 
 # Conectando a Instância
+
+Para conectar a uma instância, vá até a página de instâncias em execução e selecione a instância que deseja se conectar:
+
+![image](https://github.com/user-attachments/assets/8c759b57-9618-4753-833e-b729b5adfd5b)
+
+Após isso, escolha a maneira como quer se conectar, eu usarei a conecção via SSH:
+
+![image](https://github.com/user-attachments/assets/d48144ff-cbd1-40c1-b3a2-d7af2b8e6f94)
+
+A partir disto, vá até seu terminal e entre no diretório onde está salvo o seu par de chaves .pem e execute os seguintes comandos:
+- ``chmod 400 "[nome da sua chave .pem]"``
+- ``ssh -i "[nome da sua chave .pem]" ubuntu@ec2-[endereço IPV4 público da sua instância].compute-1.amazonaws.com``
+
+Se seu usuário tiver as permissões necessárias e se estiver no grupo docker, então você conseguirá se conectar com sucesso!
+
