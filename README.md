@@ -23,8 +23,10 @@ Primeiro, é preciso criar uma VPC na AWS para hospedar a infraestrutura do proj
 
 A VPC criada para o projeto possui a seguinte estrutura:
 
+- Duas zonas de disponilidade
+- **Sub-redes:** Duas públicas e duas privadas
 - **CIDR IPv4 da VPC:** 10.0.0.0/16
-- **Internet Gateway:** Associado às sub-redes públicas.
+- **Internet Gateway:** Associado às sub-redes públicas
 
 | Sub-redes  |  Endereços IPV4  |
 | ---------- | ----------- |
@@ -63,19 +65,46 @@ Aqui é importante notar que para o HHTP (porta 80) e o HTTPS (443) tem origem n
 Para criar o EFS deste projeto, usa-se as seguintes configurações:
 
 ### Etapa 1:
+
 - Defina um nome para seu EFS
 - Escolha o tipo de sistema como sendo ``Regional``
 - Modo de taxa de transferência avançado
 
 ### Etapa 2:
+
 - Escolha a VPC do projeto
 - Defina as zonas de disponibilidade do EFS
-- 
+- Nas zonas de disponibilidade, escolhemos as zonas em que estão as instâncias EC2, que no caso são as zonas ``us-east-1a`` e ``us-east-1b``. Além disso, para as duas zonas, selecionamos o security group que criamos para redes privadas.
+  
 ![image](https://github.com/user-attachments/assets/514b93bf-4c3a-4fe2-921c-605eab4d3442)
 
 ⚠️ Como este é apenas um projeto para fins de aprendizado, pode-se desabilitar as opções de backup e criptografia, dessa maneira, economizamos recursos de custos.
 
+# Criando uma Sub-Rede Privada para o RDS
+
+
 # Criando o Relational Database Service (RDS)
+
+Ao criar o RDS, passamos pelas seguintes configurações:
+
+- Método de criação de banco como sendo ``Standard create``
+- Opção de motor ``MySQL`` e versão ``MySQL 8.0.39``
+- Template ``Free Tier``
+- Inserir um nome único da instância do banco de dados
+- Digitar um ID de login para o usuário mestre da instância
+- Gerenciamento de credenciais como sendo ``Self managed``
+- Especificar uma senha para o usuário mestre
+- O tupo da inatância RDS deve ser ``db.t3.micro``
+- Em conectividade:
+  - Vamos manter a opção ``Don’t connect to an EC2 compute resource``
+  - Logo em seguida, escolha a VPC do projeto
+  - Selecione a sub-rede privada criada para o RDS ⚠️
+  - Acesso público marcado como ``No``
+  - Escolher o security group das redes privadas (que já deve existir)
+  - Deixar as zonas de preferência como ``No prefecence``
+- Após isso, podemos criar o RDS!
+
+⚠️ Salve informações como nome do banco, ID do usuário master e senha, pois serão usados futuramente para definir variáveis de ambiente no script ``user_data.sh`` no qual definiremos a conecção da instância com o RDS.
 
 # Criando uma Instância EC2
 
@@ -91,14 +120,14 @@ Para criar o EFS deste projeto, usa-se as seguintes configurações:
 - Configurar o armazenamento;
 - Se quiser, em ``Detalhes Avançados``, pode-se adicionar um script de comando a ser executado quando você executar a instância (dados do usuário).
 
-### Na minha EC2, usei as seguintes configurações:
+### Para este projeto, podemos usar as seguintes configurações:
 
 - AMI Ubuntu
 - Instância do tipo t2.micro
-- Selecionei um par de chaves existente
-- Escolhi uma VPC que criei com duas subnets privadas e outras duas públicas
-- Selecionei uma subnet privada
-- Criei um grupo de segurança
+- Selecionar um par de chaves existente ou criar um
+- Escolher VPC criada para projeto
+- Selecionar subnet privada
+- Selecionar grupo de segurança
 - Defini minhas configurações de armazenamento (1x 25 GiB gp2 Volume raiz)
 - E em detalhes avançados, defini o seguinte script de inicialização:
 
