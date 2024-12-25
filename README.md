@@ -15,11 +15,9 @@ A atividade proposta envolve configurar e implementar uma aplicação WordPress 
    
 (5). Configurar um Load Balancer da AWS para a aplicação do WordPress, distribuindo, então, o tráfego de rede de forma eficiente entre várias instâncias ou contêineres que estejam executando o WordPress.
 
-# Criando uma VPC (Virtual Private Cloud)
+# Iniciando Implantação do Projeto: Criando uma VPC (Virtual Private Cloud)
 
-Primeiro, é preciso criar uma VPC na AWS para hospedar a infraestrutura do projeto. Para isso, definimos o CIDR, que são os endereços Ip's que podem ser usados na VPC, a quantidade de sub-redes menores e suas respectivas conexões com a internet.
-
-![image](https://github.com/user-attachments/assets/ff138793-99fb-4dca-8ba1-8b18661bc9af)
+O primeiro passo para a execução deste projeto é a criação de uma Rede Privada Virtual, é preciso criar esta VPC na AWS para hospedar a infraestrutura do projeto. Portanto, no ambiente da AWS pesquise na barra de pesquisa por "VPC", clique e inicie a criação de uma; a partir disto, definimos o bloco CIDR (que é o intervalo de endereços IPv4 para a VPC), a quantidade de sub-redes menores e suas respectivas conexões com a internet.
 
 A VPC criada para o projeto possui a seguinte estrutura:
 
@@ -41,6 +39,10 @@ A VPC criada para o projeto possui a seguinte estrutura:
 | Sub-redes privadas inicialmente isoladas. |
 
 Cada sub-rede está associada a uma zona de disponibilidade (AZ) para distribuir a infraestrutura geograficamente dentro da região AWS, aumentando a resiliência da aplicação.
+
+![image](https://github.com/user-attachments/assets/ff138793-99fb-4dca-8ba1-8b18661bc9af)
+
+Se você seguiu as instruções listadas acima, sua VPC vai ter o esquema de fluxo como o da imagem.
 
 # Criando os Security Groups
 
@@ -80,9 +82,6 @@ Para criar o EFS deste projeto, usa-se as seguintes configurações:
 
 ⚠️ Como este é apenas um projeto para fins de aprendizado, pode-se desabilitar as opções de backup e criptografia, dessa maneira, economizamos recursos de custos.
 
-# Criando uma Sub-Rede Privada para o RDS
-
-
 # Criando o Relational Database Service (RDS)
 
 Ao criar o RDS, passamos pelas seguintes configurações:
@@ -104,7 +103,64 @@ Ao criar o RDS, passamos pelas seguintes configurações:
   - Deixar as zonas de preferência como ``No prefecence``
 - Após isso, podemos criar o RDS!
 
-⚠️ Salve informações como nome do banco, ID do usuário master e senha, pois serão usados futuramente para definir variáveis de ambiente no script ``user_data.sh`` no qual definiremos a conecção da instância com o RDS.
+⚠️ Salve informações como nome do banco, ID do usuário master e senha, pois serão usados futuramente para definir variáveis de ambiente no script ``user_data.sh`` no qual definiremos a conecção da instância com o RDS. Além disso, em ``Configuração adicional`` podemos desativar opções de backup, monitoramento e criptografia para evitar gastos.
+
+# Criando uma Bastion Host
+
+O bastion host serve para conectarmos a nossa instância
+
+Configurações da Bastion Host:
+
+Lembre-se que seu bastion host precisa ter um edereço público, por isso, atenção quando for configurar a rede.
+
+- Defina um nome como ``wordpress-bastion-host``
+- Escolha a imagem de sistema ``Ubuntu`` na versão ``24.04 LTS``
+- Tipo de instância ``t2.micro``
+- Selecione seu par de chaves .pem ou crie um
+- Selecione a VPC do projeto
+- Escolha uma sub-rede pública (⚠️ passo importante)
+- Escolha o grupo de segurança para redes públicas criado anteriormente (⚠️ passo importante)
+- Habilite a atribuição de IP Público automático (⚠️ passo importante)
+- Mantenha as configurações de armazenamento como estão
+
+Lembre-se que para editar as ``Configurações de Rede``, é preciso clicar em ``Editar`` no canto superior direito do bloco:
+
+![image](https://github.com/user-attachments/assets/b389aa49-1628-41f3-a504-e70d19ebf832)
+
+Agora, conecte-se a sua instância bastion host via protocolo SSH!
+
+# Conectando a Instância
+
+Para conectar a uma instância, vá até a página de instâncias em execução e selecione a instância que deseja se conectar:
+
+![image](https://github.com/user-attachments/assets/8c759b57-9618-4753-833e-b729b5adfd5b)
+
+Após isso, escolha a maneira como quer se conectar, eu usarei a conecção via SSH:
+
+![image](https://github.com/user-attachments/assets/d48144ff-cbd1-40c1-b3a2-d7af2b8e6f94)
+
+A partir disto, vá até seu terminal e navegue até o diretório onde está salvo o seu par de chaves .pem e execute os seguintes comandos:
+
+- ``chmod 400 "[nome da sua chave .pem]"``
+- ``ssh -i "[nome da sua chave .pem]" ubuntu@ec2-[endereço IPV4 público da sua instância].compute-1.amazonaws.com``
+  
+Se seu usuário tiver as permissões necessárias e se estiver no grupo docker, então você conseguirá se conectar com sucesso!
+
+Futuramente, vamos precisar acessar nossas instâncias privadas através da instância bastion host (para isso que criamos ela!), portanto, vamos precisar copiar nosso par de chaves (que está na máquina local) para a máquina virtual.
+
+No terminal da sua máquina local, ainda no diretório onde está sua chave e execute o seguinte comando:
+
+````
+scp -i <chave.pem> <arquivo_local> <usuario>@<ip_remoto>:<caminho_destino_remoto>
+````
+
+- ``chave.pem`` É o arquivo da sua chave.
+- ``arquivo_local`` É o diretório local, o caminho, onde está sua chave.
+- ``usuario`` É o nome do usuário da máquina virtual, no nosso caso, como estamos usando uma AMI Ubuntu, o nome sera "ubuntu".
+- ``ip_remoto`` É o IPV4 atribuído a sua máquina virtual (você pode verificar na AWS)
+- ``caminho_destino_remoto``
+
+Agora você estará conectado e sua chave estrá copiada.
 
 # Criando uma Instância EC2
 
@@ -170,22 +226,5 @@ docker-compose -f /home/ec2-user/wordpress/docker-compose.yml up -d
 ````
 
 Após isso, executei minha instância!   :)
-
-# Conectando a Instância
-
-Para conectar a uma instância, vá até a página de instâncias em execução e selecione a instância que deseja se conectar:
-
-![image](https://github.com/user-attachments/assets/8c759b57-9618-4753-833e-b729b5adfd5b)
-
-Após isso, escolha a maneira como quer se conectar, eu usarei a conecção via SSH:
-
-![image](https://github.com/user-attachments/assets/d48144ff-cbd1-40c1-b3a2-d7af2b8e6f94)
-
-A partir disto, vá até seu terminal e entre no diretório onde está salvo o seu par de chaves .pem e execute os seguintes comandos:
-- ``chmod 400 "[nome da sua chave .pem]"``
-- ``ssh -i "[nome da sua chave .pem]" ubuntu@ec2-[endereço IPV4 público da sua instância].compute-1.amazonaws.com``
-
-Se seu usuário tiver as permissões necessárias e se estiver no grupo docker, então você conseguirá se conectar com sucesso!
-
 
 
