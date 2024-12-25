@@ -107,9 +107,9 @@ Ao criar o RDS, passamos pelas seguintes configurações:
 
 # Criando uma Bastion Host
 
-O bastion host serve para conectarmos a nossa instância
+O bastion host é um servidor intermediário usado para acessar máquinas em uma rede privada com segurança. Ele funciona como uma ponte entre a internet e os recursos internos, garantindo que as outras máquinas na rede privada não fiquem expostas diretamente à internet. Resumindo, vamos acessar nossas instâncias privadas através de uma instância pública que acessa a internet, que é o bastion host!
 
-Configurações da Bastion Host:
+Configurações da bastion host:
 
 Lembre-se que seu bastion host precisa ter um edereço público, por isso, atenção quando for configurar a rede.
 
@@ -131,7 +131,7 @@ Agora, conecte-se a sua instância bastion host via protocolo SSH!
 
 # Conectando a Instância
 
-Para conectar a uma instância, vá até a página de instâncias em execução e selecione a instância que deseja se conectar:
+Para conectar a uma instância, vá até a página de instâncias em execução, selecione a instância que deseja se conectar e clique no botão ``Conectar`` no canto superior esquerdo:
 
 ![image](https://github.com/user-attachments/assets/8c759b57-9618-4753-833e-b729b5adfd5b)
 
