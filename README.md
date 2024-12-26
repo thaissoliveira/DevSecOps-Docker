@@ -227,4 +227,57 @@ docker-compose -f /home/ec2-user/wordpress/docker-compose.yml up -d
 
 Após isso, executei minha instância!   :)
 
+# Teste de integração com Load Balancer (LB)
+
+Um Load Balancer (Balanceador de Carga) na AWS é um serviço gerenciado que distribui automaticamente o tráfego de entrada de uma aplicação entre várias instâncias, contêineres ou recursos computacionais, garantindo alta disponibilidade, escalabilidade e resiliência. Portanto, ele balanceia o tráfego de entrada para evitar sobrecarga em um único recurso, no caso, em uma única zona. Além disso, ele integra-se ao Auto Scaling, garantindo que novos recursos sejam adicionados ou removidos conforme a demanda, o que será muito importante no futuro do projeto.
+
+Na área de EC2, pesquise por ``Load balancers`` e inicie a criação de um grupo seguindo as seguintes características:
+
+- Escolha o tipo do LB como sendo ``Classic Load Balancer ``
+- Dê um nome ao seu LB
+- Mantenha o ``Scheme`` como ``Internet-facing``
+- Selecione a VPC do projeto e em seguida as duas zonas disponíveis que aparecerão, assim como as sub-redes públicas destas zonas (É importante que as sub-redes sejam as públicas)
+
+  ![image](https://github.com/user-attachments/assets/a417cd55-a233-454b-b96b-576f2e117fb2)
+
+- Escolha o security group criado anteriormente para o LB
+- No campo ``Health checks`` adicione o caminho de ping path: ``/wp-admin/index.php``
+- Em ``Instâncias`` selecione as instâncias privadas que foram criadas anteriormente
+
+  ![image](https://github.com/user-attachments/assets/d23492aa-88b4-4ab5-bff0-095a6e5cf4b5)
+
+- Clique em ``Create load balancer``
+
+Para verificar se suas instâncias passaram do teste de integração, vá no campo ``Target instances`` e veja se as instâncias estão em serviço.
+
+![image](https://github.com/user-attachments/assets/2e00ab11-8d4c-4af1-8012-79fff9f82ca4)
+
+# Criando um Grupo de Auto Scaling
+
+O Auto Scaling Group (ASG) da AWS é um serviço que ajusta automaticamente a capacidade computacional da aplicação de acordo com a demanda, garantindo que ela tenha o desempenho necessário enquanto otimiza custos. Ele opera principalmente com grupos de Auto Scaling associados a instâncias EC2. O Auto Scaling garante que o site continue funcional mesmo durante picos de tráfego, escalando horizontalmente, enquanto que durante períodos de baixa, o número de instâncias é reduzido para economizar. Pode ser integrado a balanceadores de carga (ELB) para distribuir o tráfego uniformemente entre as instâncias escaladas.
+
+Na área de EC2, pesquise por ``Auto Scaling Groups`` e inicie a criação de um grupo com as seguintes configurações:
+
+- Dê um nome para o grupo
+- Em ``Launch Template``, selecione o modelo de execução criado para instâncias privadas e clique em ``Next``
+- Na próxima página, escolha a VPC do projeto e selecione as sub-redes públicas e clique em ``Next``
+- Em ``Load Balancing`` escolha a opção ``Attach to an existing load balancer`` e logo em seguida selecione ``Choose from Classic Load Balancers``
+- Selecione o Classic Load Balancer que foi criado na etapa anterior e clique em ``Next``
+  
+    ![image](https://github.com/user-attachments/assets/2b748b93-3176-4457-af48-2f824e6ad605)
+
+- Defina as variáveis:
+   - Capacidade Mínima ``(min size)``: 2 (o ASG nunca terá menos de duas instâncias).
+   - Capacidade Desejada ``(desired capacity)``: 2 (o ASG inicia com duas instâncias).
+   - Capacidade Máxima ``(max size)``: 4 (o ASG pode escalar até um total de três instâncias).
+- O restante das configurações, mantenha como estão.
+
+Se você for até a página de instâncias, verá que o ASG está subindo novas instâncias!
+
+![image](https://github.com/user-attachments/assets/2c27e3b1-db5e-4013-b9aa-c7dc8495c89d)
+
+# Conclusão
+
+
+
 
