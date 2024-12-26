@@ -307,7 +307,6 @@ Se você for até a página de instâncias, verá que o ASG está subindo novas 
 
 ![image](https://github.com/user-attachments/assets/2c27e3b1-db5e-4013-b9aa-c7dc8495c89d)
 
-# Conclusão
 
 
 
