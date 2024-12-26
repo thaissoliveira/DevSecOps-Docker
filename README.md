@@ -15,9 +15,9 @@ A atividade proposta envolve configurar e implementar uma aplicação WordPress 
    
 (5). Configurar um Load Balancer da AWS para a aplicação do WordPress, distribuindo, então, o tráfego de rede de forma eficiente entre várias instâncias ou contêineres que estejam executando o WordPress.
 
-# Iniciando Implantação do Projeto: Criando uma VPC (Virtual Private Cloud)
+# Iniciando Implantação do Projeto: Criando uma VPC 
 
-O primeiro passo para a execução deste projeto é a criação de uma Rede Privada Virtual, é preciso criar esta VPC na AWS para hospedar a infraestrutura do projeto. Portanto, no ambiente da AWS pesquise na barra de pesquisa por "VPC", clique e inicie a criação de uma; a partir disto, definimos o bloco CIDR (que é o intervalo de endereços IPv4 para a VPC), a quantidade de sub-redes menores e suas respectivas conexões com a internet.
+O primeiro passo para a execução deste projeto é a criação de uma Rede Privada Virtual (Virtual Private Cloud), é preciso criar esta VPC na AWS para hospedar a infraestrutura do projeto. Portanto, no ambiente da AWS pesquise na barra de pesquisa por "VPC", clique e inicie a criação de uma; a partir disto, definimos o bloco CIDR (que é o intervalo de endereços IPv4 para a VPC), a quantidade de sub-redes menores e suas respectivas conexões com a internet.
 
 A VPC criada para o projeto possui a seguinte estrutura:
 
@@ -46,21 +46,49 @@ Se você seguiu as instruções listadas acima, sua VPC vai ter o esquema de flu
 
 # Criando os Security Groups
 
+Os grupos de segurança na AWS são firewalls virtuais que controlam o tráfego de entrada e saída de instâncias e outros recursos na nuvem, baseando-se em regras que definem quais protocolos, portas e endereços IP são permitidos. São baseados em estado, o que significa que permitem automaticamente o tráfego de retorno para conexões ativas. Por padrão, bloqueiam todo o tráfego de entrada e permitem todo o tráfego de saída, mas podem ser configurados conforme as necessidades. Para nosso projeto, vamos criar um grupo de segurança para cada serviço, a fim de deixar mais organizado e preciso. Vá até a área de EC2 na AWS e pesquise por ``Security groups`` para criar os grupos.
+
 ### Grupo de segurança para redes públicas:
 
-![image](https://github.com/user-attachments/assets/0ecbb1e7-83ea-4a59-8d48-d80d2998ec0d)
+Regra de entrada em rede pública:
 
-![image](https://github.com/user-attachments/assets/c26bf811-975f-4dab-ac43-6b6db58fd560)
+![image](https://github.com/user-attachments/assets/fe6feede-b4a7-48ab-af09-d7a1530df6c2)
+
+Regra de saída: All traffic.
 
 ### Grupo de segurança para redes privadas:
 
+Regra de entrada:
+
 Aqui é importante notar que para o HHTP (porta 80) e o HTTPS (443) tem origem no security group público.
 
-![image](https://github.com/user-attachments/assets/66eebb59-25a1-4ed9-97bb-5a7949db12a1)
+![image](https://github.com/user-attachments/assets/80f70b3a-f92c-4e6f-96c3-eda9043d5072)
 
-![image](https://github.com/user-attachments/assets/73f75630-0aaf-44a6-9083-972c17291c36)
+Regra de saída: All traffic.
 
-### Grupo de segurança do RDS
+### Grupo de segurança para Elastic File System:
+
+Regra de entrada:
+
+![image](https://github.com/user-attachments/assets/7fb945ad-2b6b-47e6-9075-68927da5c929)
+
+Regra de saída: All traffic.
+
+### Grupo de segurança para Load Balancer:
+
+Regra de entrada:
+
+![image](https://github.com/user-attachments/assets/f18aa9b5-2172-481c-a728-c1412a54fd46)
+
+Regra de saída: All traffic.
+
+### Grupo de segurança para RDS:
+
+Regra de entrada:
+
+![image](https://github.com/user-attachments/assets/19c9a9bd-6989-4d31-bb5b-ebdf6009b3ca)
+
+Regra de saída: All trafic.
 
 # Criando o Elactic File System (EFS)
 
@@ -97,7 +125,6 @@ Ao criar o RDS, passamos pelas seguintes configurações:
 - Em conectividade:
   - Vamos manter a opção ``Don’t connect to an EC2 compute resource``
   - Logo em seguida, escolha a VPC do projeto
-  - Selecione a sub-rede privada criada para o RDS ⚠️
   - Acesso público marcado como ``No``
   - Escolher o security group das redes privadas (que já deve existir)
   - Deixar as zonas de preferência como ``No prefecence``
@@ -164,17 +191,7 @@ Agora você estará conectado e sua chave estrá copiada.
 
 # Criando uma Instância EC2
 
-### Para criar uma isntância EC2, é preciso definir várias configurações:
 
-- Adicionar as tags (ou rótulos);
-- Escolher uma AMI (modelo que contém a configuração do software necessária para executar a instância);
-- Selecionar um tipo de instância que atenda às suas necessidades de computação, memória, rede ou armazenamento;
-- Selecionar um par de chaves, importantes para provar sua identidade ao se conectar a uma instância do Amazon EC2, ou criar um novo;
-- Escolher a VPC e a subnet que serão utilizadas;
-- Decidir se irá ou não habilitar a criação automática de IP público;
-- Definir um grupo de segurança para controlar o tráfego de entrada e saída, ou criar um novo.
-- Configurar o armazenamento;
-- Se quiser, em ``Detalhes Avançados``, pode-se adicionar um script de comando a ser executado quando você executar a instância (dados do usuário).
 
 ### Para este projeto, podemos usar as seguintes configurações:
 
@@ -190,39 +207,53 @@ Agora você estará conectado e sua chave estrá copiada.
 ````
 #!/bin/bash
 
-sudo yum update -y
-sudo yum install -y docker
+# Atualizar pacotes do sistema
+sudo apt update -y
+sudo apt upgrade -y
 
+# Instalar Docker, curl e suporte a NFS
+sudo apt install -y docker.io
+sudo apt install -y nfs-common
+
+# Iniciar e habilitar o serviço Docker
 sudo systemctl start docker
 sudo systemctl enable docker
 
-sudo usermod -aG docker ec2-user
-newgrp docker
+# Adicionar o usuário ao grupo Docker
+sudo usermod -aG docker $(whoami)
 
+# Baixar e instalar Docker Compose
 sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 
-sudo mkdir -p /home/ec2-user/wordpress
+# Criar diretório para o WordPress
+sudo mkdir -p /home/$(whoami)/wordpress
 
-cat <<EOF > /home/ec2-user/wordpress/docker-compose.yml
+# Criar o arquivo docker-compose.yml com configurações do WordPress
+cat <<EOF > /home/$(whoami)/wordpress/docker-compose.yml
+version: '3.1'
+
 services:
   wordpress:
     image: wordpress
     restart: always
     ports:
-      - 80:80
+      - "80:80"
     environment:
       WORDPRESS_DB_HOST: database-1.cbsqoiwwa7q6.us-east-1.rds.amazonaws.com:3306
       WORDPRESS_DB_USER: admin
       WORDPRESS_DB_PASSWORD: admin1289
-      WORDPRESS_DB_NAME: wordpressbd
+      WORDPRESS_DB_NAME: wordpressdb
     volumes:
       - /mnt/efs:/var/www/html
 EOF
 
-sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport fs-07c30321be437f1f2.efs.us-east-1.amazonaws.com:/ /mnt/efs
+# Montar o EFS na máquina local
+sudo mkdir -p /mnt/efs
+sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport fs-0ff145e2edac09127.efs.us-east-1.amazonaws.com:/ /mnt/efs
 
-docker-compose -f /home/ec2-user/wordpress/docker-compose.yml up -d
+# Rodar o Docker Compose para iniciar o WordPress
+sudo docker-compose -f /home/$(whoami)/wordpress/docker-compose.yml up -d
 ````
 
 Após isso, executei minha instância!   :)
